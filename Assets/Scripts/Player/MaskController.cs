@@ -18,10 +18,21 @@ public class MaskController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
     }
+    
+    private void OnEnable()
+    {
+        isRecovering = false;
+        isGrounded = false;
+        
+        if(rb != null) 
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+    }
 
     private void Update()
     {
-        // Havadaysak, dinleniyorsak veya input yoksa işlem yapma
         if (!isGrounded || isRecovering) return;
 
         HandleInput();
@@ -42,28 +53,21 @@ public class MaskController : MonoBehaviour
 
     private void Jump(Vector3 direction)
     {
-        isGrounded = false; // Manuel olarak "havadayım" de
+        isGrounded = false;
         
-        // Hızı sıfırla (Tutarlılık için şart)
         rb.linearVelocity = Vector3.zero; 
         rb.angularVelocity = Vector3.zero;
 
-        // Kuvvet uygula
         Vector3 jumpVec = (Vector3.up * upForce) + (direction * forwardForce);
         rb.AddForce(jumpVec, ForceMode.Impulse);
     }
 
-    // --- EN ÖNEMLİ KISIM: COLLISION EVENTLERİ ---
 
-    // Bir şeye çarptığımız an çalışır
     private void OnCollisionEnter(Collision collision)
     {
-        // Sadece "Zemin" ile çarpışınca çalışsın
-        // NOT: Yere 'Ground' Tag'i vermeyi unutma!
         if (collision.gameObject.CompareTag("Ground"))
         {
-            // Sadece yukarıdan aşağı düşerken (yere inince) çalışsın
-            // Yan duvara çarpınca yere indim sanmasın
+
             if(collision.contacts[0].normal.y > 0.5f) 
             {
                 OnLand();
@@ -73,12 +77,11 @@ public class MaskController : MonoBehaviour
 
     private void OnLand()
     {
-        // Zaten yerdeysek tekrar tetikleme
         if (isGrounded) return;
 
         Debug.Log("Yere İndi!");
         isGrounded = true;
-        rb.linearVelocity = Vector3.zero; // Kaymayı engellemek için anlık durdur
+        rb.linearVelocity = Vector3.zero;
         
         StartCoroutine(RecoverRoutine());
     }
@@ -87,7 +90,6 @@ public class MaskController : MonoBehaviour
     {
         isRecovering = true;
         
-        // Bekleme süresi
         yield return new WaitForSeconds(landingRecoveryTime);
 
         isRecovering = false;
