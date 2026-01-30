@@ -1,16 +1,7 @@
-using UnityEngine;
-
-public class StandardEnemy : MonoBehaviour
+namespace EnemyAI
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public class StandardEnemy : PossessableEnemy
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+    
     }
 }

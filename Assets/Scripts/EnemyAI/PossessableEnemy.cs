@@ -1,64 +1,127 @@
+using Player;
 using UnityEngine;
 
-namespace EnemyAI
+public class PossessableEnemy : EnemyBase 
 {
-    public abstract class PossessableEnemy : EnemyBase
+    [Header("Enlightenment Stats")]
+    public float maxStability = 100f;
+    public float decayRate = 5f;
+    public float damagePenalty = 10f;
+
+    protected float currentStability;
+    private Renderer[] renderers;
+    private Color originalColor;
+
+    protected override void Awake()
     {
-        [Header("Host Stats")]
-        public float maxEnlightenmentTime = 10f;
-        protected float currentEnlightenmentTime;
-        public float decayRate = 1f;
-
-        public virtual void OnPossess()
-        {
-            currentState = EnemyState.Possessed;
-            agent.enabled = false;
-            currentEnlightenmentTime = 0;
+        base.Awake();
+        renderers = GetComponentsInChildren<Renderer>();
+        if(renderers.Length > 0) originalColor = renderers[0].material.color;
         
-            Debug.Log("Bedene girildi: " + gameObject.name);
-        }
+        currentStability = maxStability;
+    }
 
-        public virtual void OnDepossess(bool fullEnlightenment)
+    protected override void Update()
+    {
+        base.Update();
+
+        if (currentState == EnemyState.Possessed)
         {
-            agent.enabled = true;
-        
-            if (fullEnlightenment)
-            {
-                Die();
-            }
-            else
-            {
-                currentState = EnemyState.Chase; 
-                currentEnlightenmentTime = 0;
-                Debug.Log("Erken çıkıldı, düşman öfkeli!");
-            }
+            HandlePossessedUpdate();
         }
-
-        public void HandlePossessedUpdate()
-        {
-            currentEnlightenmentTime += Time.deltaTime * decayRate;
-        
-            // UI Bar Update'i buraya event olarak atılabilir.
-
-            MoveInput();
-
-            if (Input.GetButtonDown("Fire1"))
-            {
-                Attack();
-            }
-        }
-
-        protected virtual void MoveInput()
-        {
-            float h = Input.GetAxis("Horizontal");
-            float v = Input.GetAxis("Vertical");
-            Vector3 move = new Vector3(h, 0, v) * 5f * Time.deltaTime;
-            transform.Translate(move, Space.World);
-        }
+    }
     
-        private void Die()
+    public virtual void OnPossess()
+    {
+        currentState = EnemyState.Possessed;
+        agent.enabled = false;
+        
+        gameObject.tag = "Player"; 
+        gameObject.layer = LayerMask.NameToLayer("Player");
+
+        ChangeColor(Color.cyan);
+
+        currentStability = maxStability;
+    }
+
+    public virtual void OnDepossess(bool isEnlightened)
+    {
+        gameObject.tag = "Enemy";
+        gameObject.layer = LayerMask.NameToLayer("Enemy");
+
+        ChangeColor(originalColor);
+
+        if (isEnlightened)
         {
-            Destroy(gameObject);
+            Die();
         }
+        else
+        {
+            currentState = EnemyState.Chase; 
+            agent.enabled = true;
+            currentStability = maxStability;
+        }
+    }
+
+    protected virtual void HandlePossessedUpdate()
+    {
+        currentStability -= Time.deltaTime * decayRate;
+        Debug.Log(currentStability);
+
+        if (currentStability <= 0)
+        {
+            PossessionManager.Instance.Eject(); 
+            return;
+        }
+
+        MoveInput();
+
+        if (Input.GetButtonDown("Fire1"))
+        {
+            Attack(); 
+        }
+    }
+
+    protected virtual void MoveInput()
+    {
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+
+        Vector3 moveDir = new Vector3(h, 0, v).normalized;
+
+        if (moveDir.magnitude >= 0.1f)
+        {
+            // Basit Transform hareketi (NavMesh kapalıyken)
+            // Jam için transform.Translate yeterli, ama duvara girmemeye dikkat.
+            // Daha sağlamı: CharacterController ekleyip Move() kullanmaktır.
+            transform.Translate(moveDir * agent.speed * Time.deltaTime, Space.World);
+
+            // Dönüş yumuşatma
+            Quaternion toRotation = Quaternion.LookRotation(moveDir, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, 720 * Time.deltaTime);
+        }
+    }
+
+    public void TakeStabilityDamage(float amount)
+    {
+        if (currentState == EnemyState.Possessed)
+        {
+            currentStability -= amount;
+        }
+    }
+
+    public bool IsEnlightened()
+    {
+        return (currentStability / maxStability) <= 0.2f;
+    }
+
+    private void Die()
+    {
+        Destroy(gameObject);
+    }
+
+    private void ChangeColor(Color c)
+    {
+        foreach(var r in renderers) r.material.color = c;
     }
 }
