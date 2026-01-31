@@ -35,7 +35,7 @@ namespace EnemyAI
             Destroy(gameObject);
         }
 
-        protected override void Attack()
+        public override void Attack()
         {
             base.Attack();
         }

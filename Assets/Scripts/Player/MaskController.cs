@@ -1,4 +1,5 @@
 using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -44,6 +45,10 @@ public class MaskController : MonoBehaviour
         float v = Input.GetAxisRaw("Vertical");
 
         Vector3 inputDir = new Vector3(h, 0, v).normalized;
+        
+        Quaternion lookRotation = Quaternion.LookRotation(new Vector3(inputDir.x, 0, inputDir.z));
+        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
+        transform.DORotateQuaternion(lookRotation, 0.5f);
 
         if (inputDir.magnitude > 0.1f)
         {

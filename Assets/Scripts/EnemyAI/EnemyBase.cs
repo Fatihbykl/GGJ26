@@ -21,12 +21,14 @@ public abstract class EnemyBase : MonoBehaviour
 
     protected NavMeshAgent agent;
     protected Transform playerTransform;
+    protected Animator animator;
     public EnemyState currentState = EnemyState.Idle;
     
 
     protected virtual void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        animator = GetComponent<Animator>();
         playerTransform = GameObject.FindGameObjectWithTag("Player").transform; 
         PossessionManager.Instance.OnPossessChanged += OnPossessChanged;
     }
@@ -50,32 +52,36 @@ public abstract class EnemyBase : MonoBehaviour
         switch (currentState)
         {
             case EnemyState.Idle:
+                animator.SetBool("Walk", false);
+                animator.SetBool("Idle", true);
+                animator.SetBool("WalkPossessed", false);
                 if (distanceToPlayer < detectionRadius) currentState = EnemyState.Chase;
                 break;
 
             case EnemyState.Chase:
+                animator.SetBool("Walk", true);
+                animator.SetBool("Idle", false);
+                animator.SetBool("WalkPossessed", false);
                 agent.isStopped = false;
                 agent.SetDestination(playerTransform.position);
                 
-                if (distanceToPlayer <= attackRange) currentState = EnemyState.Attack;
+                if (distanceToPlayer <= attackRange && Time.time > lastAttackTime + attackCooldown) currentState = EnemyState.Attack;
                 if (distanceToPlayer > detectionRadius * 1.5f) currentState = EnemyState.Idle;
                 break;
 
             case EnemyState.Attack:
                 agent.isStopped = true;
                 FaceTarget();
-                if (Time.time > lastAttackTime + attackCooldown)
-                {
-                    Attack();
-                    lastAttackTime = Time.time;
-                }
+                animator.SetTrigger("Attack");
+                //Attack();
+                lastAttackTime = Time.time;
                 
                 if (distanceToPlayer > attackRange) currentState = EnemyState.Chase;
                 break;
         }
     }
 
-    protected virtual void Attack()
+    public virtual void Attack()
     {
         if (projectilePrefab == null || firePoint == null)
         {
