@@ -11,6 +11,7 @@ namespace EnemyAI
         public float damagePenalty = 10f;
 
         protected float currentStability;
+        protected float effectiveMaxStability; 
         private Renderer[] renderers;
         private Color originalColor;
         private bool isDead = false;
@@ -21,6 +22,7 @@ namespace EnemyAI
             renderers = GetComponentsInChildren<Renderer>();
             if(renderers.Length > 0) originalColor = renderers[0].material.color;
         
+            effectiveMaxStability = maxStability;
             currentStability = maxStability;
         }
 
@@ -44,7 +46,23 @@ namespace EnemyAI
 
             ChangeColor(Color.cyan);
 
-            currentStability = maxStability;
+            currentStability = effectiveMaxStability;
+        }
+
+        public override void TakeDamage(float amount)
+        {
+            if (currentState == EnemyState.Possessed)
+            {
+                TakeStabilityDamage(amount);
+            }
+            else
+            {
+                effectiveMaxStability -= amount;
+                if (effectiveMaxStability < 10f) effectiveMaxStability = 10f;
+                Debug.Log($"{gameObject.name} max stability reduced to {effectiveMaxStability}");
+            }
+            
+            base.TakeDamage(amount);
         }
 
         public virtual void OnDepossess(bool isEnlightened)

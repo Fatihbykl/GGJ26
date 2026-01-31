@@ -16,6 +16,7 @@ public abstract class EnemyBase : MonoBehaviour
     
     [Header("Combat")]
     public GameObject projectilePrefab;
+    public GameObject possessedProjectilePrefab;
     public Transform firePoint;
 
     protected NavMeshAgent agent;
@@ -81,10 +82,23 @@ public abstract class EnemyBase : MonoBehaviour
             Debug.LogWarning("Mermi veya FirePoint eksik!");
             return;
         }
+        
+        var prefab = currentState == EnemyState.Possessed ? possessedProjectilePrefab : projectilePrefab;
 
-        GameObject projectile = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
+        GameObject projectile = Instantiate(prefab, firePoint.position, firePoint.rotation);
+        
+        // Configure projectile ownership/target
+        SoundWaveProjectile swp = projectile.GetComponent<SoundWaveProjectile>();
+        if (swp != null)
+        {
+            swp.targetTag = currentState == EnemyState.Possessed ? "Enemy" : "Player";
+        }
 
         Debug.Log(gameObject.name + " saldırdı!");
+    }
+
+    public virtual void TakeDamage(float amount)
+    {
     }
 
     private void FaceTarget()
