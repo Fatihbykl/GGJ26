@@ -98,11 +98,14 @@ namespace EnemyAI
                 return;
             }
 
-            MoveInput();
+            if (!IsPlayingAttack)
+            {
+                MoveInput();
+            }
 
             if (Input.GetButtonDown("Fire1"))
             {
-                Attack(); 
+                animator.SetTrigger("Attack");
             }
         }
 

@@ -3,19 +3,24 @@ using Player;
 using UnityEngine;
 using UnityEngine.AI;
 
-public enum EnemyState { Idle, Chase, Attack, Possessed, Stunned }
+public enum EnemyState
+{
+    Idle,
+    Chase,
+    Attack,
+    Possessed,
+    Stunned
+}
 
 [RequireComponent(typeof(NavMeshAgent))]
 public abstract class EnemyBase : MonoBehaviour
 {
-    [Header("Base Stats")]
-    public float detectionRadius = 10f;
+    [Header("Base Stats")] public float detectionRadius = 10f;
     public float attackRange = 5f;
     public float attackCooldown = 2f;
     protected float lastAttackTime;
-    
-    [Header("Combat")]
-    public GameObject projectilePrefab;
+
+    [Header("Combat")] public GameObject projectilePrefab;
     public GameObject possessedProjectilePrefab;
     public Transform firePoint;
 
@@ -23,13 +28,13 @@ public abstract class EnemyBase : MonoBehaviour
     protected Transform playerTransform;
     protected Animator animator;
     public EnemyState currentState = EnemyState.Idle;
-    
+
 
     protected virtual void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponent<Animator>();
-        playerTransform = GameObject.FindGameObjectWithTag("Player").transform; 
+        playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
         PossessionManager.Instance.OnPossessChanged += OnPossessChanged;
     }
 
@@ -45,9 +50,20 @@ public abstract class EnemyBase : MonoBehaviour
         RunStateMachine();
     }
 
+    public bool IsPlayingAttack =>
+        animator.GetCurrentAnimatorStateInfo(0).IsName("Attack") ||
+        animator.GetCurrentAnimatorStateInfo(0).IsName("Base Layer.Attack") ||
+        animator.GetNextAnimatorStateInfo(0).IsName("Attack") ||
+        animator.GetNextAnimatorStateInfo(0).IsName("Base Layer.Attack");
+
     protected virtual void RunStateMachine()
     {
         float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+        if (IsPlayingAttack)
+        {
+            agent.isStopped = true;
+            return;
+        }
 
         switch (currentState)
         {
@@ -64,8 +80,9 @@ public abstract class EnemyBase : MonoBehaviour
                 animator.SetBool("WalkPossessed", false);
                 agent.isStopped = false;
                 agent.SetDestination(playerTransform.position);
-                
-                if (distanceToPlayer <= attackRange && Time.time > lastAttackTime + attackCooldown) currentState = EnemyState.Attack;
+
+                if (distanceToPlayer <= attackRange && Time.time > lastAttackTime + attackCooldown)
+                    currentState = EnemyState.Attack;
                 if (distanceToPlayer > detectionRadius * 1.5f) currentState = EnemyState.Idle;
                 break;
 
@@ -75,7 +92,7 @@ public abstract class EnemyBase : MonoBehaviour
                 animator.SetTrigger("Attack");
                 //Attack();
                 lastAttackTime = Time.time;
-                
+
                 if (distanceToPlayer > attackRange) currentState = EnemyState.Chase;
                 break;
         }
@@ -88,11 +105,11 @@ public abstract class EnemyBase : MonoBehaviour
             Debug.LogWarning("Mermi veya FirePoint eksik!");
             return;
         }
-        
+
         var prefab = currentState == EnemyState.Possessed ? possessedProjectilePrefab : projectilePrefab;
 
         GameObject projectile = Instantiate(prefab, firePoint.position, firePoint.rotation);
-        
+
         SoundWaveProjectile swp = projectile.GetComponent<SoundWaveProjectile>();
         if (swp != null)
         {
