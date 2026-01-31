@@ -14,10 +14,13 @@ public class MaskController : MonoBehaviour
     private bool isGrounded;
     private bool isRecovering; 
     private Rigidbody rb;
+    private Animator animator;
+    private Vector3 lastDirection;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        animator = GetComponent<Animator>();
     }
     
     private void OnEnable()
@@ -52,21 +55,28 @@ public class MaskController : MonoBehaviour
 
         if (inputDir.magnitude > 0.1f)
         {
-            Jump(inputDir);
+            StartJump(inputDir);
         }
     }
 
-    private void Jump(Vector3 direction)
+    private void StartJump(Vector3 direction)
     {
         isGrounded = false;
+        lastDirection = direction;
         
         rb.linearVelocity = Vector3.zero; 
         rb.angularVelocity = Vector3.zero;
 
-        Vector3 jumpVec = (Vector3.up * upForce) + (direction * forwardForce);
-        rb.AddForce(jumpVec, ForceMode.Impulse);
+        animator.SetTrigger("Jump");
+        animator.SetBool("Air", true);
     }
 
+
+    public void Jump()
+    {
+        Vector3 jumpVec = (Vector3.up * upForce) + (lastDirection * forwardForce);
+        rb.AddForce(jumpVec, ForceMode.Impulse);
+    }
 
     private void OnCollisionEnter(Collision collision)
     {
@@ -86,6 +96,8 @@ public class MaskController : MonoBehaviour
 
         isGrounded = true;
         rb.linearVelocity = Vector3.zero;
+        
+        animator.SetBool("Air", false);
         
         StartCoroutine(RecoverRoutine());
     }

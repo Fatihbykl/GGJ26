@@ -1,5 +1,6 @@
 using EnemyAI;
 using UnityEngine;
+using TMPro; // TextMeshPro kütüphanesi eklendi
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(Collider))]
@@ -11,6 +12,14 @@ public class SoundWaveProjectile : MonoBehaviour
     public float lifeTime = 3f;
     public string targetTag = "Player"; // Default to hitting player
 
+    [Header("Visuals (TMP)")]
+    public TextMeshPro textComponent; // Inspector'dan TMP objesini buraya sürükle
+    [Tooltip("Bu mermi atıldığında rastgele seçilecek kelimeler")]
+    public string[] projectileWords = { "SUS!", "İTAAT!", "YETER!", "DUR!" }; 
+    [Tooltip("Mermi giderken kendi etrafında dönsün mü? (Z ekseni)")]
+    public float rotationSpeed = 0f; 
+    public GameObject hitEffect;
+
     private void Start()
     {
         Destroy(gameObject, lifeTime);
@@ -21,11 +30,40 @@ public class SoundWaveProjectile : MonoBehaviour
             rb.useGravity = false;
             rb.isKinematic = true;
         }
+
+        // --- TMP KELİME SEÇİMİ ---
+        SetupText();
+    }
+
+    private void SetupText()
+    {
+        // Eğer component atanmamışsa çocuklarda ara
+        if (textComponent == null)
+            textComponent = GetComponentInChildren<TextMeshPro>();
+
+        // Listeden rastgele bir kelime seç ve ata
+        if (textComponent != null && projectileWords.Length > 0)
+        {
+            string randomWord = projectileWords[Random.Range(0, projectileWords.Length)];
+            textComponent.text = randomWord;
+        }
+        else
+        {
+            Debug.LogWarning("SoundWaveProjectile: TextComponent veya Kelime Listesi eksik!");
+        }
     }
 
     private void Update()
     {
+        // Hareket
         transform.Translate(Vector3.forward * speed * Time.deltaTime);
+
+        // --- GÖRSEL ANİMASYON (Dönme Efekti) ---
+        if (rotationSpeed != 0)
+        {
+            // Merminin ekseni etrafında dönmesi (Drill etkisi veya hafif yalpalama)
+            transform.Rotate(0, 0, rotationSpeed * Time.deltaTime);
+        }
     }
 
     private void OnTriggerEnter(Collider other)
@@ -80,7 +118,6 @@ public class SoundWaveProjectile : MonoBehaviour
              }
         }
 
-        
         if (other.CompareTag("Ground") || other.CompareTag("Wall"))
         {
             HitEffect();
@@ -89,7 +126,7 @@ public class SoundWaveProjectile : MonoBehaviour
 
     private void HitEffect()
     {
-        // Instantiate(vfxPrefab, transform.position, Quaternion.identity);
+        Instantiate(hitEffect, transform.position, Quaternion.identity);
         Destroy(gameObject);
     }
 }

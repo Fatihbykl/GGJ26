@@ -62,6 +62,13 @@ ModelImporter:
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
+      - time: 0.26561195
+        functionName: PlayEchoEffect
+        data: 
+        objectReferenceParameter: {fileID: 11500000, guid: 1262b50f9e92bba4a85b4237c14ae88f, type: 3}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
       transformMask: []
       maskType: 3
       maskSource: {instanceID: 0}

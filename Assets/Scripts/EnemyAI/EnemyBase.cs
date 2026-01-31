@@ -23,6 +23,7 @@ public abstract class EnemyBase : MonoBehaviour
     [Header("Combat")] public GameObject projectilePrefab;
     public GameObject possessedProjectilePrefab;
     public Transform firePoint;
+    public ParticleSystem echoEffect;
 
     protected NavMeshAgent agent;
     protected Transform playerTransform;
@@ -96,6 +97,11 @@ public abstract class EnemyBase : MonoBehaviour
                 if (distanceToPlayer > attackRange) currentState = EnemyState.Chase;
                 break;
         }
+    }
+
+    public void PlayEchoEffect()
+    {
+        echoEffect.Play();
     }
 
     public virtual void Attack()
