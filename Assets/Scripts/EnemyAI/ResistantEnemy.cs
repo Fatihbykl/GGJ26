@@ -13,8 +13,14 @@ namespace EnemyAI
         
             Vector3 intendedMove = new Vector3(h, 0, v);
             Vector3 corruptedMove = intendedMove + (transform.right * drift);
-
+            
+            animator.SetBool("Idle", false);
+            animator.SetBool("WalkPossessed", true);
+            
             transform.Translate(corruptedMove * 5f * Time.deltaTime, Space.World);
+            
+            Quaternion toRotation = Quaternion.LookRotation(corruptedMove, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, 720 * Time.deltaTime);
         }
     }
 }

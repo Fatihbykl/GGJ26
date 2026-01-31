@@ -14,8 +14,8 @@ namespace EnemyAI
         protected float currentStability;
         protected float effectiveMaxStability; 
         private Renderer[] renderers;
-        private Color originalColor;
         private bool isDead = false;
+        private Material defaultMat;
         
         public float CurrentStability => currentStability;
         public float EffectiveMaxStability => effectiveMaxStability;
@@ -24,7 +24,7 @@ namespace EnemyAI
         {
             base.Start();
             renderers = GetComponentsInChildren<Renderer>();
-            if(renderers.Length > 0) originalColor = renderers[0].material.color;
+            if(renderers.Length > 0) defaultMat = renderers[0].material;
         
             effectiveMaxStability = maxStability;
             currentStability = maxStability;
@@ -40,7 +40,7 @@ namespace EnemyAI
             }
         }
     
-        public virtual void OnPossess()
+        public virtual void OnPossess(Material m)
         {
             currentState = EnemyState.Possessed;
             agent.enabled = false;
@@ -48,7 +48,7 @@ namespace EnemyAI
             gameObject.tag = "Player"; 
             gameObject.layer = LayerMask.NameToLayer("Player");
 
-            ChangeColor(Color.cyan);
+            ChangeMaterial(m);
 
             currentStability = effectiveMaxStability;
         }
@@ -74,7 +74,7 @@ namespace EnemyAI
             gameObject.tag = "Enemy";
             gameObject.layer = LayerMask.NameToLayer("Enemy");
 
-            ChangeColor(originalColor);
+            ChangeMaterial(defaultMat);
 
             if (isEnlightened)
             {
@@ -100,6 +100,7 @@ namespace EnemyAI
 
             if (!IsPlayingAttack)
             {
+                animator.SetBool("Walk", false);
                 MoveInput();
             }
 
@@ -118,10 +119,17 @@ namespace EnemyAI
 
             if (moveDir.magnitude >= 0.1f)
             {
+                animator.SetBool("Idle", false);
+                animator.SetBool("WalkPossessed", true);
                 transform.Translate(moveDir * agent.speed * Time.deltaTime, Space.World);
 
                 Quaternion toRotation = Quaternion.LookRotation(moveDir, Vector3.up);
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, 720 * Time.deltaTime);
+            }
+            else
+            {
+                animator.SetBool("Idle", true);
+                animator.SetBool("WalkPossessed", false);
             }
         }
 
@@ -148,9 +156,9 @@ namespace EnemyAI
             Destroy(gameObject);
         }
 
-        private void ChangeColor(Color c)
+        private void ChangeMaterial(Material m)
         {
-            foreach(var r in renderers) r.material.color = c;
+            renderers[0].material = m;
         }
     }
 }

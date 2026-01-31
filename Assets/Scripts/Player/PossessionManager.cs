@@ -14,6 +14,7 @@ namespace Player
         public GameObject maskPlayer;
         public CinemachineCamera virtualCamera;
         public MicroBar stabilityBar;
+        public Material possessionMaterial;
 
         [Header("Settings")]
         public KeyCode ejectKey = KeyCode.Space;
@@ -50,7 +51,7 @@ namespace Player
 
             maskPlayer.SetActive(false);
 
-            targetEnemy.OnPossess();
+            targetEnemy.OnPossess(possessionMaterial);
 
             virtualCamera.Follow = targetEnemy.transform;
             virtualCamera.LookAt = targetEnemy.transform;
