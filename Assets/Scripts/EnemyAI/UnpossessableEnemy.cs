@@ -1,16 +1,43 @@
 using UnityEngine;
 
-public class UnpossessableEnemy : MonoBehaviour
+namespace EnemyAI
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public class UnpossessableEnemy : EnemyBase
     {
+        public float health = 100f;
         
-    }
+        protected override void Start()
+        {
+            base.Start();
+        }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        protected override void Update()
+        {
+            base.Update();
+        }
+
+        public override void TakeDamage(float amount)
+        {
+            health -= amount;
+            Debug.Log($"{gameObject.name} took {amount} damage. Current health: {health}");
+            
+            if (health <= 0)
+            {
+                Die();
+            }
+            
+            base.TakeDamage(amount);
+        }
+
+        private void Die()
+        {
+            Debug.Log($"{gameObject.name} died.");
+            Destroy(gameObject);
+        }
+
+        protected override void Attack()
+        {
+            base.Attack();
+        }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using EnemyAI;
 using Unity.Cinemachine;
 using UnityEngine;
@@ -15,6 +16,8 @@ namespace Player
         [Header("Settings")]
         public KeyCode ejectKey = KeyCode.Space;
 
+        public Action<Transform> OnPossessChanged;
+        
         // State
         private PossessableEnemy currentHost;
         public bool IsPossessing => currentHost != null;
@@ -46,13 +49,14 @@ namespace Player
             virtualCamera.LookAt = targetEnemy.transform;
 
             Debug.Log(targetEnemy.name + " bedeni ele geçirildi!");
+            OnPossessChanged?.Invoke(targetEnemy.transform);
         }
 
         public void Eject()
         {
             if (!IsPossessing) return;
 
-            maskPlayer.transform.position = currentHost.transform.position + Vector3.up * 2f;
+            maskPlayer.transform.position = currentHost.transform.position + Vector3.forward * 2f;
             maskPlayer.SetActive(true);
         
             Rigidbody maskRb = maskPlayer.GetComponent<Rigidbody>();
@@ -65,6 +69,7 @@ namespace Player
             virtualCamera.LookAt = maskPlayer.transform;
 
             currentHost = null;
+            OnPossessChanged?.Invoke(maskPlayer.transform);
         }
     }
 }

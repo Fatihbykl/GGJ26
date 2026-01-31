@@ -1,3 +1,5 @@
+using System;
+using Player;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -11,15 +13,27 @@ public abstract class EnemyBase : MonoBehaviour
     public float attackRange = 5f;
     public float attackCooldown = 2f;
     protected float lastAttackTime;
+    
+    [Header("Combat")]
+    public GameObject projectilePrefab;
+    public GameObject possessedProjectilePrefab;
+    public Transform firePoint;
 
     protected NavMeshAgent agent;
     protected Transform playerTransform;
     public EnemyState currentState = EnemyState.Idle;
+    
 
-    protected virtual void Awake()
+    protected virtual void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         playerTransform = GameObject.FindGameObjectWithTag("Player").transform; 
+        PossessionManager.Instance.OnPossessChanged += OnPossessChanged;
+    }
+
+    private void OnPossessChanged(Transform host)
+    {
+        playerTransform = host;
     }
 
     protected virtual void Update()
@@ -63,8 +77,28 @@ public abstract class EnemyBase : MonoBehaviour
 
     protected virtual void Attack()
     {
-        Debug.Log(gameObject.name + " ses dalgası attı: 'Uyum Sağla!'");
-        // Buraya Projectile Instantiate kodu gelecek
+        if (projectilePrefab == null || firePoint == null)
+        {
+            Debug.LogWarning("Mermi veya FirePoint eksik!");
+            return;
+        }
+        
+        var prefab = currentState == EnemyState.Possessed ? possessedProjectilePrefab : projectilePrefab;
+
+        GameObject projectile = Instantiate(prefab, firePoint.position, firePoint.rotation);
+        
+        // Configure projectile ownership/target
+        SoundWaveProjectile swp = projectile.GetComponent<SoundWaveProjectile>();
+        if (swp != null)
+        {
+            swp.targetTag = currentState == EnemyState.Possessed ? "Enemy" : "Player";
+        }
+
+        Debug.Log(gameObject.name + " saldırdı!");
+    }
+
+    public virtual void TakeDamage(float amount)
+    {
     }
 
     private void FaceTarget()
@@ -72,5 +106,10 @@ public abstract class EnemyBase : MonoBehaviour
         Vector3 direction = (playerTransform.position - transform.position).normalized;
         Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
+    }
+
+    private void OnDestroy()
+    {
+        PossessionManager.Instance.OnPossessChanged -= OnPossessChanged;
     }
 }

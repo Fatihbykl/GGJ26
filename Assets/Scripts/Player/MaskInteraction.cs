@@ -1,3 +1,4 @@
+using EnemyAI;
 using UnityEngine;
 
 namespace Player
