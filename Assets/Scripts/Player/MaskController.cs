@@ -79,7 +79,6 @@ public class MaskController : MonoBehaviour
     {
         if (isGrounded) return;
 
-        Debug.Log("Yere İndi!");
         isGrounded = true;
         rb.linearVelocity = Vector3.zero;
         
@@ -93,6 +92,5 @@ public class MaskController : MonoBehaviour
         yield return new WaitForSeconds(landingRecoveryTime);
 
         isRecovering = false;
-        Debug.Log("Tekrar zıplamaya hazır.");
     }
 }

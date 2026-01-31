@@ -87,7 +87,6 @@ public abstract class EnemyBase : MonoBehaviour
 
         GameObject projectile = Instantiate(prefab, firePoint.position, firePoint.rotation);
         
-        // Configure projectile ownership/target
         SoundWaveProjectile swp = projectile.GetComponent<SoundWaveProjectile>();
         if (swp != null)
         {

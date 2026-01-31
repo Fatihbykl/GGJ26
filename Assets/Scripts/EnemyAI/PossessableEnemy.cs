@@ -1,3 +1,4 @@
+using Microlight.MicroBar;
 using Player;
 using UnityEngine;
 
@@ -15,6 +16,9 @@ namespace EnemyAI
         private Renderer[] renderers;
         private Color originalColor;
         private bool isDead = false;
+        
+        public float CurrentStability => currentStability;
+        public float EffectiveMaxStability => effectiveMaxStability;
 
         protected override void Start()
         {
@@ -87,7 +91,6 @@ namespace EnemyAI
         protected virtual void HandlePossessedUpdate()
         {
             currentStability -= Time.deltaTime * decayRate;
-            Debug.Log(currentStability);
 
             if (currentStability <= 0)
             {
